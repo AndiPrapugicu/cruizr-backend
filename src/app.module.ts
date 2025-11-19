@@ -63,6 +63,14 @@ import { AppGateway } from './app.gateway';
         ssl: {
           rejectUnauthorized: false,
         },
+        extra: {
+          // Force IPv4
+          host: 'db.zavnqtoogteoabtjgakl.supabase.co',
+          port: 5432,
+          ssl: {
+            rejectUnauthorized: false,
+          },
+        },
       }),
       inject: [ConfigService],
     }),
