@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build",
+    "build": "npx nest build",
     "postbuild": "node -e \"console.log('Build completed. Contents of dist:'); const fs = require('fs'); if (fs.existsSync('dist')) { console.log(fs.readdirSync('dist')); } else { console.log('dist folder not found!'); }\"",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
