@@ -43,10 +43,10 @@ export class FuelWallet {
   @Column({ type: 'int', default: 0 })
   streakDays: number;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastLoginDate: Date;
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   lastEarnDate: Date;
 
   @Column({ type: 'json', nullable: true })

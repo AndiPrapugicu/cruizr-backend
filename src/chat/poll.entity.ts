@@ -41,7 +41,7 @@ export class Poll {
   @OneToMany(() => PollVote, (vote) => vote.poll)
   votes: PollVote[];
 
-  @Column({ type: 'datetime', nullable: true })
+  @Column({ type: 'timestamp', nullable: true })
   expiresAt: Date;
 
   @CreateDateColumn()
