@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { FuelWallet } from './fuel-wallet.entity';
 
 export enum FuelTransactionType {
@@ -7,7 +14,7 @@ export enum FuelTransactionType {
   BONUS = 'bonus',
   REFUND = 'refund',
   PREMIUM_PURCHASED = 'premium_purchased',
-  PREMIUM_SPENT = 'premium_spent'
+  PREMIUM_SPENT = 'premium_spent',
 }
 
 export enum FuelEarnReason {
@@ -16,22 +23,22 @@ export enum FuelEarnReason {
   MATCH_CREATED = 'match_created',
   MESSAGE_SENT = 'message_sent',
   PROFILE_LIKED_BACK = 'profile_liked_back',
-  
-  // Content Activities  
+
+  // Content Activities
   CAR_ADDED = 'car_added',
   VIDEO_ADDED = 'video_added',
   PROFILE_COMPLETED = 'profile_completed',
   PHOTO_UPLOADED = 'photo_uploaded',
-  
+
   // Engagement
   DAILY_LOGIN = 'daily_login',
   WEEKLY_STREAK = 'weekly_streak',
   ACHIEVEMENT_UNLOCKED = 'achievement_unlocked',
-  
+
   // Special Events
   REFERRAL_BONUS = 'referral_bonus',
   SEASONAL_BONUS = 'seasonal_bonus',
-  PREMIUM_BONUS = 'premium_bonus'
+  PREMIUM_BONUS = 'premium_bonus',
 }
 
 @Entity('fuel_transactions')
@@ -44,7 +51,7 @@ export class FuelTransaction {
 
   @Column({
     type: 'varchar',
-    length: 50
+    length: 50,
   })
   type: FuelTransactionType;
 
@@ -54,14 +61,14 @@ export class FuelTransaction {
   @Column({
     type: 'varchar',
     length: 20,
-    default: 'fuel'
+    default: 'fuel',
   })
   currency: 'fuel' | 'premium';
 
   @Column({
     type: 'varchar',
     length: 50,
-    nullable: true
+    nullable: true,
   })
   reason?: FuelEarnReason;
 
@@ -77,7 +84,7 @@ export class FuelTransaction {
   @CreateDateColumn()
   createdAt: Date;
 
-  @ManyToOne(() => FuelWallet, wallet => wallet.transactions)
+  @ManyToOne(() => FuelWallet, (wallet) => wallet.transactions)
   @JoinColumn({ name: 'walletId' })
   wallet: FuelWallet;
 }

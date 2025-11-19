@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: cruizr-backend
+    env: node
+    region: frankfurt
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/src/main.js
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 22.16.0
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        value: https://cruizr-frontend.vercel.app
+      - key: API_URL
+        sync: false # Will be set to your Render service URL
+    # Add your secret environment variables in Render Dashboard:
+    # - JWT_SECRET (generate a secure random string)
+    # - DATABASE_URL (if using external database)
+    # - STRIPE_SECRET_KEY (if using Stripe payments)
+    # - key: JWT_SECRET
+    #   generateValue: true
+    # - key: DATABASE_URL
+    #   fromDatabase:
+    #     name: cruizr-db
+    #     property: connectionString

@@ -32,13 +32,13 @@ export class Poll {
   @Column()
   createdByUserId: number;
 
-  @ManyToOne(() => User, user => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   createdBy: User;
 
   @Column()
   matchId: string;
 
-  @OneToMany(() => PollVote, vote => vote.poll)
+  @OneToMany(() => PollVote, (vote) => vote.poll)
   votes: PollVote[];
 
   @Column({ type: 'datetime', nullable: true })
@@ -68,10 +68,10 @@ export class PollVote {
   @Column({ length: 500, nullable: true })
   comment: string;
 
-  @ManyToOne(() => Poll, poll => poll.votes)
+  @ManyToOne(() => Poll, (poll) => poll.votes)
   poll: Poll;
 
-  @ManyToOne(() => User, user => user.id)
+  @ManyToOne(() => User, (user) => user.id)
   user: User;
 
   @CreateDateColumn()

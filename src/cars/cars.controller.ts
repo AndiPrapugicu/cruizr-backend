@@ -236,7 +236,8 @@ export class CarsController {
       throw new Error('No video file received');
     }
 
-    const url = `http://localhost:3000/uploads/videos/${file.filename}`;
+    const baseUrl = process.env.API_URL || 'http://localhost:3000';
+    const url = `${baseUrl}/uploads/videos/${file.filename}`;
     console.log('Returning video URL:', url);
     return { url };
   }

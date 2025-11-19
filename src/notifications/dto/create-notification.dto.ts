@@ -9,7 +9,14 @@ export class CreateNotificationDto {
   @IsOptional()
   fromUserId?: number;
 
-  @IsEnum(['like', 'super-like', 'match', 'message', 'profile-view', 'boost-activated'])
+  @IsEnum([
+    'like',
+    'super-like',
+    'match',
+    'message',
+    'profile-view',
+    'boost-activated',
+  ])
   type: NotificationType;
 
   @IsString()

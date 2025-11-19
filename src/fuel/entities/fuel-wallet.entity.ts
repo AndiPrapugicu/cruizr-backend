@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { FuelTransaction } from './fuel-transaction.entity';
 
 @Entity('fuel_wallets')
@@ -52,7 +59,10 @@ export class FuelWallet {
   monthlyEarnings: Record<string, number>;
 
   @Column({ type: 'json', nullable: true })
-  earnLimits: Record<string, { current: number; max: number; resetDate: string }>;
+  earnLimits: Record<
+    string,
+    { current: number; max: number; resetDate: string }
+  >;
 
   @Column({ type: 'date', nullable: true })
   lastDailyLogin: Date;
@@ -63,6 +73,6 @@ export class FuelWallet {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @OneToMany(() => FuelTransaction, transaction => transaction.wallet)
+  @OneToMany(() => FuelTransaction, (transaction) => transaction.wallet)
   transactions: FuelTransaction[];
 }

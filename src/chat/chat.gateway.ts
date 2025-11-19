@@ -100,7 +100,10 @@ export class ChatGateway {
   ) {
     // Extract user from token
     let token: string | undefined;
-    if (client.handshake.auth && typeof client.handshake.auth.token === 'string') {
+    if (
+      client.handshake.auth &&
+      typeof client.handshake.auth.token === 'string'
+    ) {
       token = client.handshake.auth.token.trim();
     }
 
@@ -120,7 +123,9 @@ export class ChatGateway {
 
     // Don't create poll message in chat, just emit notification
     // Emit poll notification to all users in the match
-    console.log(`📊 [CHAT-GATEWAY] Emitting pollCreated event to room: ${pollData.matchId}`);
+    console.log(
+      `📊 [CHAT-GATEWAY] Emitting pollCreated event to room: ${pollData.matchId}`,
+    );
     this.server.to(pollData.matchId).emit('pollCreated', {
       type: 'poll-notification',
       pollType: 'custom',
@@ -128,7 +133,9 @@ export class ChatGateway {
       createdBy: userName,
       matchId: pollData.matchId,
     });
-    console.log(`📊 [CHAT-GATEWAY] Poll notification sent for question: ${pollData.question}`);
+    console.log(
+      `📊 [CHAT-GATEWAY] Poll notification sent for question: ${pollData.question}`,
+    );
   }
 
   @SubscribeMessage('votePoll')
@@ -139,7 +146,10 @@ export class ChatGateway {
   ) {
     // Extract user from token
     let token: string | undefined;
-    if (client.handshake.auth && typeof client.handshake.auth.token === 'string') {
+    if (
+      client.handshake.auth &&
+      typeof client.handshake.auth.token === 'string'
+    ) {
       token = client.handshake.auth.token.trim();
     }
 
@@ -171,7 +181,10 @@ export class ChatGateway {
   ) {
     // Extract user from token
     let token: string | undefined;
-    if (client.handshake.auth && typeof client.handshake.auth.token === 'string') {
+    if (
+      client.handshake.auth &&
+      typeof client.handshake.auth.token === 'string'
+    ) {
       token = client.handshake.auth.token.trim();
     }
 

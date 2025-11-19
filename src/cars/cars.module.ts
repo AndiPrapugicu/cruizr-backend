@@ -6,10 +6,7 @@ import { CarsController } from './cars.controller';
 import { BadgesModule } from '../badges/badges.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Car]),
-    forwardRef(() => BadgesModule),
-  ],
+  imports: [TypeOrmModule.forFeature([Car]), forwardRef(() => BadgesModule)],
   providers: [CarsService],
   controllers: [CarsController],
   exports: [CarsService],

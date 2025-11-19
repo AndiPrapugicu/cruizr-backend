@@ -25,15 +25,15 @@ export class SwipeEnhanced {
   @Column({ type: 'varchar' })
   direction: SwipeType;
 
-  @Column({ 
-    type: 'varchar', 
-    default: 'normal' 
+  @Column({
+    type: 'varchar',
+    default: 'normal',
   })
   enhancement: SwipeEnhancement;
 
-  @Column({ 
-    type: 'json', 
-    nullable: true 
+  @Column({
+    type: 'json',
+    nullable: true,
   })
   metadata?: {
     storeItemId?: string;

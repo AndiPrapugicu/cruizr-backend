@@ -1,4 +1,10 @@
-import { IsEnum, IsNumber, IsOptional, IsString, IsObject } from 'class-validator';
+import {
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsObject,
+} from 'class-validator';
 import { FuelEarnReason } from '../entities/fuel-transaction.entity';
 
 export class EarnFuelDto {
@@ -50,7 +56,10 @@ export class FuelWalletResponseDto {
   dailyEarnings: Record<string, number>;
   weeklyEarnings: Record<string, number>;
   monthlyEarnings: Record<string, number>;
-  earnLimits: Record<string, { current: number; max: number; resetDate: string }>;
+  earnLimits: Record<
+    string,
+    { current: number; max: number; resetDate: string }
+  >;
   lastDailyLogin: Date;
   createdAt: Date;
   updatedAt: Date;

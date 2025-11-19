@@ -23,13 +23,40 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '10mb' }));
   app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 
+  // CORS Configuration
+  const allowedOrigins = [
+    'http://localhost:5173', // Local development
+    'http://localhost:3000',
+    'https://cruizr-frontend.vercel.app', // Production frontend
+    process.env.FRONTEND_URL, // Dynamic frontend URL from env
+  ].filter(Boolean); // Remove undefined values
+
   app.enableCors({
-    origin: true, // sau true pentru orice origin (doar pentru dev!)
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        process.env.NODE_ENV === 'development'
+      ) {
+        callback(null, true);
+      } else {
+        console.log(`🚫 CORS blocked origin: ${origin}`);
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
 
-  // Servește fișierele din uploads
-  app.use('/uploads', express.static(join(__dirname, '..', '..', 'uploads')));
+  console.log(`🌐 CORS enabled for origins:`, allowedOrigins);
+
+  // Servește fișierele din uploads - ajustat pentru dist/src/main.js
+  const uploadsPath = join(__dirname, '..', '..', '..', 'uploads');
+  app.use('/uploads', express.static(uploadsPath));
+  console.log(`📁 Serving uploads from: ${uploadsPath}`);
 
   const config = new DocumentBuilder()
     .setTitle('AutoMatch API')
@@ -40,6 +67,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000, '0.0.0.0');
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+  console.log(`🚀 Application is running on: http://0.0.0.0:${port}`);
 }
 bootstrap();

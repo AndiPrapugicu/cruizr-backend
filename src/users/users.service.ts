@@ -325,7 +325,9 @@ export class UsersService {
       .getRawMany();
 
     const excludedIdsFromMatches = existingMatches.map((match) =>
-      match.match_userAId === currentUserId ? match.match_userBId : match.match_userAId,
+      match.match_userAId === currentUserId
+        ? match.match_userBId
+        : match.match_userAId,
     );
 
     // Blocked IDs

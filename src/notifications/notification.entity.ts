@@ -1,7 +1,20 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from '../users/users.entity';
 
-export type NotificationType = 'like' | 'super-like' | 'match' | 'message' | 'profile-view' | 'boost-activated';
+export type NotificationType =
+  | 'like'
+  | 'super-like'
+  | 'match'
+  | 'message'
+  | 'profile-view'
+  | 'boost-activated';
 
 @Entity('notifications')
 export class Notification {

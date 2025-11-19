@@ -82,8 +82,6 @@ export class MatchesService {
     }));
   }
 
-
-
   async swipe(
     fromUserId: number,
     toUserId: number,
