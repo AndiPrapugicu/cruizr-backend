@@ -102,7 +102,10 @@ export class UsersController {
     }),
   )
   async uploadPhoto(@UploadedFile() file: Express.Multer.File, @Req() req) {
-    return { url: `/uploads/photos/${file.filename}` };
+    const protocol = req.protocol || 'https';
+    const host = req.get('host') || 'cruizr-backend.onrender.com';
+    const baseUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
+    return { url: `${baseUrl}/uploads/photos/${file.filename}` };
   }
 
   // ────────────────────────────────────────────────────────────

@@ -122,8 +122,11 @@ export class CarsController {
       throw new Error('No file received');
     }
 
-    const url = `/uploads/photos/${file.filename}`;
-    console.log('Returning URL:', url);
+    const protocol = req.protocol || 'https';
+    const host = req.headers.host || 'cruizr-backend.onrender.com';
+    const baseUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
+    const url = `${baseUrl}/uploads/photos/${file.filename}`;
+    console.log('Returning full URL:', url);
     return { url };
   }
 
@@ -163,7 +166,10 @@ export class CarsController {
       const buffer = Buffer.from(base64Data, 'base64');
       fs.writeFileSync(filepath, buffer);
 
-      const url = `/uploads/photos/${filename}`;
+      const protocol = req.protocol || 'https';
+      const host = req.headers.host || 'cruizr-backend.onrender.com';
+      const baseUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
+      const url = `${baseUrl}/uploads/photos/${filename}`;
       console.log('Base64 image saved successfully:', url);
       return { url };
     } catch (error) {

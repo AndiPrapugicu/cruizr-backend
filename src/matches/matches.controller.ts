@@ -48,6 +48,10 @@ export class MatchesController {
   }
 
   @Get('recent-matches')
+  async getRecentMatches(@Req() req) {
+    return this.matchesService.getRecentMatches(+req.user.userId);
+  }
+
   @Post('swipe')
   async swipe(@Req() req, @Body() body: SwipeDto) {
     const fromUserId = +req.user.userId;

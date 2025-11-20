@@ -82,6 +82,34 @@ export class MatchesService {
     }));
   }
 
+  async getRecentMatches(userId: number) {
+    // Get recent accepted matches (within last 24 hours)
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    const recentMatches = await this.matchRepo.find({
+      where: [
+        { userA: { id: userId }, status: 'accepted' },
+        { userB: { id: userId }, status: 'accepted' },
+      ],
+      relations: ['userA', 'userB'],
+      order: { createdAt: 'DESC' },
+      take: 10,
+    });
+
+    return recentMatches.map((match) => {
+      const otherUser = match.userA.id === userId ? match.userB : match.userA;
+      return {
+        id: otherUser.id,
+        name: otherUser.name,
+        carModel: otherUser.carModel,
+        imageUrl: otherUser.imageUrl,
+        matchId: match.id,
+        matchedAt: match.createdAt,
+      };
+    });
+  }
+
   async swipe(
     fromUserId: number,
     toUserId: number,
