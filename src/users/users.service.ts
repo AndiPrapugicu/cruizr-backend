@@ -94,8 +94,57 @@ export class UsersService {
   async completeOnboarding(userId: number, dto: any) {
     console.log('🎯 CompleteOnboarding called with:', { userId, dto });
 
+    const fs = require('fs');
+    const path = require('path');
+    const { v4: uuidv4 } = require('uuid');
+
+    // Helper function to save Base64 image to disk
+    const saveBase64Image = (base64Data: string): string => {
+      // Remove data:image/...;base64, prefix
+      const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (!matches) {
+        console.error('❌ Invalid base64 format');
+        return '';
+      }
+
+      const ext = matches[1]; // png, jpg, etc.
+      const data = matches[2];
+      const filename = `${uuidv4()}.${ext}`;
+      const uploadDir = path.join(process.cwd(), 'uploads', 'photos');
+
+      // Create directory if it doesn't exist
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const filepath = path.join(uploadDir, filename);
+      fs.writeFileSync(filepath, data, 'base64');
+
+      return `/uploads/photos/${filename}`;
+    };
+
     // Extract cars data and non-database fields from DTO
     const { cars, firstName, birthday, agreed, photos, ...userData } = dto;
+
+    // Process and save photos
+    let savedPhotos: string[] = [];
+    if (photos && Array.isArray(photos) && photos.length > 0) {
+      console.log(`📸 Processing ${photos.length} photos...`);
+      savedPhotos = photos
+        .map((photo: string) => {
+          try {
+            if (photo.startsWith('data:image')) {
+              return saveBase64Image(photo);
+            }
+            return photo; // Already a URL
+          } catch (error) {
+            console.error('❌ Error saving photo:', error);
+            return null;
+          }
+        })
+        .filter((p): p is string => p !== null);
+      console.log(`✅ Saved ${savedPhotos.length} photos`);
+    }
 
     // Parse cars if it's a JSON string
     let carsData = cars;
@@ -108,19 +157,37 @@ export class UsersService {
       }
     }
 
+    // Process car photos
+    if (carsData && Array.isArray(carsData)) {
+      carsData = carsData.map((car: any) => {
+        if (car.photos && Array.isArray(car.photos)) {
+          car.photos = car.photos
+            .map((photo: string) => {
+              try {
+                if (photo.startsWith('data:image')) {
+                  return saveBase64Image(photo);
+                }
+                return photo;
+              } catch (error) {
+                console.error('❌ Error saving car photo:', error);
+                return null;
+              }
+            })
+            .filter((p: string | null): p is string => p !== null);
+        }
+        return car;
+      });
+    }
+
     console.log('🚗 Cars data to save:', carsData);
 
-    // Update user data with proper field mapping, excluding non-database fields
+    // Update user data with proper field mapping
     const userUpdateData = {
       ...userData,
-      ...(firstName && { name: firstName }), // Map firstName to name
-      ...(birthday && { birthdate: birthday }), // Map birthday to birthdate
-      ...(photos &&
-        photos.length > 0 && {
-          photos: photos.map((p: any) =>
-            typeof p === 'string' ? p : p.data || '',
-          ),
-        }),
+      ...(firstName && { name: firstName }),
+      ...(birthday && { birthdate: birthday }),
+      ...(savedPhotos.length > 0 && { photos: savedPhotos }),
+      ...(savedPhotos.length > 0 && { imageUrl: savedPhotos[0] }), // Set first photo as profile image
       onboardingCompleted: true,
     };
 
