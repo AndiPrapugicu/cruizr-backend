@@ -379,4 +379,19 @@ export class UsersController {
       throw error;
     }
   }
+
+  // ────────────────────────────────────────────────────────────
+  // ▶︎ TEMP: Reset user photos (remove old file paths)
+  //   → POST /users/reset-photos
+  // ────────────────────────────────────────────────────────────
+  @UseGuards(JwtAuthGuard)
+  @Post('reset-photos')
+  async resetPhotos(@Req() req) {
+    const userId = +req.user.userId;
+    await this.usersService.updateProfile(userId, {
+      photos: [],
+      imageUrl: null,
+    });
+    return { message: 'Photos reset successfully. You can now upload new Base64 photos.' };
+  }
 }
