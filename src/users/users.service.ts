@@ -109,15 +109,18 @@ export class UsersService {
       ...userData 
     } = dto;
 
+    // Get base URL for full photo URLs
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+
     // Process uploaded photo files
     let savedPhotos: string[] = [];
     if (uploadedPhotos && Array.isArray(uploadedPhotos) && uploadedPhotos.length > 0) {
       console.log(`📸 Processing ${uploadedPhotos.length} uploaded photo files...`);
       savedPhotos = uploadedPhotos.map((file: Express.Multer.File) => {
-        // File is already saved by Multer, just return the path
-        return `/uploads/photos/${file.filename}`;
+        // Return FULL URL instead of relative path
+        return `${baseUrl}/uploads/photos/${file.filename}`;
       });
-      console.log(`✅ Saved ${savedPhotos.length} photos:`, savedPhotos);
+      console.log(`✅ Saved ${savedPhotos.length} photos with full URLs:`, savedPhotos);
     }
 
     // Parse cars if it's a JSON string or array of JSON strings
@@ -149,11 +152,11 @@ export class UsersService {
       console.log('🚗 Processing car photos...');
       Object.keys(carPhotosByIndex).forEach(carIndex => {
         const carPhotos = carPhotosByIndex[carIndex];
-        const photoPaths = carPhotos.map((file: Express.Multer.File) => `/uploads/photos/${file.filename}`);
+        const photoPaths = carPhotos.map((file: Express.Multer.File) => `${baseUrl}/uploads/photos/${file.filename}`);
         
         if (carsData && carsData[carIndex]) {
           carsData[carIndex].photos = photoPaths;
-          console.log(`✅ Added ${photoPaths.length} photos to car ${carIndex}`);
+          console.log(`✅ Added ${photoPaths.length} photos with full URLs to car ${carIndex}`);
         }
       });
     }

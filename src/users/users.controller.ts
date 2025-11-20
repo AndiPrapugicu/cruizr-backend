@@ -135,9 +135,10 @@ export class UsersController {
     const currentPhotos = user?.photos || [];
     console.log(`📸 [UploadPhotos] Current photos array:`, currentPhotos);
 
-    // Add new photo paths
-    const newPhotoPaths = files.map((file) => `/uploads/photos/${file.filename}`);
-    console.log(`📸 [UploadPhotos] New photo paths:`, newPhotoPaths);
+    // Create FULL URLs for uploaded photos
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    const newPhotoPaths = files.map((file) => `${baseUrl}/uploads/photos/${file.filename}`);
+    console.log(`📸 [UploadPhotos] New photo FULL URLs:`, newPhotoPaths);
     
     const allPhotos = [...currentPhotos, ...newPhotoPaths];
     console.log(`📸 [UploadPhotos] All photos combined:`, allPhotos);
