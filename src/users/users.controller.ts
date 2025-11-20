@@ -12,6 +12,7 @@ import {
   Param,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   Query,
   NotFoundException,
   BadRequestException,
@@ -28,7 +29,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 // import { UserProfileDto } from './dto/user-profile.dto';
 import { UserProfileDto } from './dto/user-profile.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
@@ -337,12 +338,27 @@ export class UsersController {
   //   → POST /users/onboarding-register
   // ────────────────────────────────────────────────────────────
   @Post('onboarding-register')
-  async completeOnboardingWithRegistration(@Body() dto: any) {
+  @UseInterceptors(
+    FilesInterceptor('photos', 10, {
+      storage: diskStorage({
+        destination: './uploads/photos',
+        filename: (req, file, cb) => {
+          const ext = path.extname(file.originalname);
+          cb(null, uuidv4() + ext);
+        },
+      }),
+    }),
+  )
+  async completeOnboardingWithRegistration(
+    @Body() dto: any,
+    @UploadedFiles() photos: Express.Multer.File[],
+  ) {
     try {
       console.log(
         '🎯 [OnboardingRegister] Starting registration+onboarding for:',
         dto.firstName,
       );
+      console.log('📸 [OnboardingRegister] Received', photos?.length || 0, 'photo files');
 
       // Create user account
       const hash = await require('bcrypt').hash('password123', 10); // Temporary password
@@ -355,8 +371,15 @@ export class UsersController {
       const user = await this.usersService.create(userData);
       console.log('✅ [OnboardingRegister] User created:', user.id);
 
+      // Add uploaded file paths to DTO
+      const onboardingData = {
+        ...dto,
+        uploadedPhotos: photos || [],
+        interests: dto.interests ? JSON.parse(dto.interests) : [],
+      };
+
       // Complete onboarding
-      await this.usersService.completeOnboarding(user.id, dto);
+      await this.usersService.completeOnboarding(user.id, onboardingData);
       console.log('✅ [OnboardingRegister] Onboarding completed');
 
       // Generate token

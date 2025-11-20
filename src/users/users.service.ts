@@ -98,52 +98,25 @@ export class UsersService {
     const path = require('path');
     const { v4: uuidv4 } = require('uuid');
 
-    // Helper function to save Base64 image to disk
-    const saveBase64Image = (base64Data: string): string => {
-      // Remove data:image/...;base64, prefix
-      const matches = base64Data.match(/^data:image\/(\w+);base64,(.+)$/);
-      if (!matches) {
-        console.error('❌ Invalid base64 format');
-        return '';
-      }
+    // Extract uploaded files and other data
+    const { 
+      cars, 
+      firstName, 
+      birthday, 
+      agreed, 
+      uploadedPhotos, // Now we receive actual uploaded files
+      ...userData 
+    } = dto;
 
-      const ext = matches[1]; // png, jpg, etc.
-      const data = matches[2];
-      const filename = `${uuidv4()}.${ext}`;
-      const uploadDir = path.join(process.cwd(), 'uploads', 'photos');
-
-      // Create directory if it doesn't exist
-      if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
-      }
-
-      const filepath = path.join(uploadDir, filename);
-      fs.writeFileSync(filepath, data, 'base64');
-
-      return `/uploads/photos/${filename}`;
-    };
-
-    // Extract cars data and non-database fields from DTO
-    const { cars, firstName, birthday, agreed, photos, ...userData } = dto;
-
-    // Process and save photos
+    // Process uploaded photo files
     let savedPhotos: string[] = [];
-    if (photos && Array.isArray(photos) && photos.length > 0) {
-      console.log(`📸 Processing ${photos.length} photos...`);
-      savedPhotos = photos
-        .map((photo: string) => {
-          try {
-            if (photo.startsWith('data:image')) {
-              return saveBase64Image(photo);
-            }
-            return photo; // Already a URL
-          } catch (error) {
-            console.error('❌ Error saving photo:', error);
-            return null;
-          }
-        })
-        .filter((p): p is string => p !== null);
-      console.log(`✅ Saved ${savedPhotos.length} photos`);
+    if (uploadedPhotos && Array.isArray(uploadedPhotos) && uploadedPhotos.length > 0) {
+      console.log(`📸 Processing ${uploadedPhotos.length} uploaded photo files...`);
+      savedPhotos = uploadedPhotos.map((file: Express.Multer.File) => {
+        // File is already saved by Multer, just return the path
+        return `/uploads/photos/${file.filename}`;
+      });
+      console.log(`✅ Saved ${savedPhotos.length} photos:`, savedPhotos);
     }
 
     // Parse cars if it's a JSON string
@@ -157,27 +130,8 @@ export class UsersService {
       }
     }
 
-    // Process car photos
-    if (carsData && Array.isArray(carsData)) {
-      carsData = carsData.map((car: any) => {
-        if (car.photos && Array.isArray(car.photos)) {
-          car.photos = car.photos
-            .map((photo: string) => {
-              try {
-                if (photo.startsWith('data:image')) {
-                  return saveBase64Image(photo);
-                }
-                return photo;
-              } catch (error) {
-                console.error('❌ Error saving car photo:', error);
-                return null;
-              }
-            })
-            .filter((p: string | null): p is string => p !== null);
-        }
-        return car;
-      });
-    }
+    // For now, we'll handle car photos in a separate upload if needed
+    // TODO: Handle car photo uploads from FormData
 
     console.log('🚗 Cars data to save:', carsData);
 
@@ -201,8 +155,10 @@ export class UsersService {
 
       for (const carData of carsData) {
         try {
-          await this.carsService.create(userId, carData);
-          console.log('✅ Car saved:', carData.brand, carData.model);
+          // Parse car data if it's a string
+          const parsedCarData = typeof carData === 'string' ? JSON.parse(carData) : carData;
+          await this.carsService.create(userId, parsedCarData);
+          console.log('✅ Car saved:', parsedCarData.make, parsedCarData.model);
         } catch (error) {
           console.error('❌ Error saving car:', error);
         }
