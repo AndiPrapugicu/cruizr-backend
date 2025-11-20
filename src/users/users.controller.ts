@@ -126,15 +126,21 @@ export class UsersController {
     @Req() req,
   ) {
     const userId = +req.user.userId;
-    console.log(`📸 Uploading ${files.length} photos for user ${userId}`);
+    console.log(`📸 [UploadPhotos] Starting upload for user ${userId}, files:`, files.length);
 
     // Get current user photos
     const user = await this.usersService.findById(userId);
+    console.log(`📸 [UploadPhotos] Current user:`, { id: user?.id, name: user?.name, currentPhotos: user?.photos });
+    
     const currentPhotos = user?.photos || [];
+    console.log(`📸 [UploadPhotos] Current photos array:`, currentPhotos);
 
     // Add new photo paths
     const newPhotoPaths = files.map((file) => `/uploads/photos/${file.filename}`);
+    console.log(`📸 [UploadPhotos] New photo paths:`, newPhotoPaths);
+    
     const allPhotos = [...currentPhotos, ...newPhotoPaths];
+    console.log(`📸 [UploadPhotos] All photos combined:`, allPhotos);
 
     // Update user with new photos
     await this.usersService.updateProfile(userId, {
@@ -142,11 +148,13 @@ export class UsersController {
       imageUrl: allPhotos[0], // Keep first photo as profile image
     });
 
-    console.log(`✅ Updated user ${userId} with ${allPhotos.length} total photos`);
+    // Fetch updated user to confirm
+    const updatedUser = await this.usersService.findById(userId);
+    console.log(`✅ [UploadPhotos] User after update:`, { id: updatedUser?.id, photos: updatedUser?.photos });
 
     return {
       success: true,
-      photos: allPhotos,
+      photos: updatedUser?.photos || allPhotos,
       newPhotos: newPhotoPaths,
     };
   }
