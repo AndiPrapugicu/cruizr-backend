@@ -390,7 +390,7 @@ export class UsersController {
     const userId = +req.user.userId;
     await this.usersService.updateProfile(userId, {
       photos: [],
-      imageUrl: null,
+      imageUrl: undefined,
     });
     return { message: 'Photos reset successfully. You can now upload new Base64 photos.' };
   }
