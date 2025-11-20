@@ -109,8 +109,9 @@ export class UsersService {
       ...userData 
     } = dto;
 
-    // Get base URL for full photo URLs
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    // Get base URL - use hardcoded production URL as fallback
+    const baseUrl = process.env.BACKEND_URL || 'https://cruizr-backend.onrender.com';
+    console.log('🌐 Using baseUrl for photos:', baseUrl);
 
     // Process uploaded photo files
     let savedPhotos: string[] = [];

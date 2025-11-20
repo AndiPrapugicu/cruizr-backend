@@ -135,8 +135,12 @@ export class UsersController {
     const currentPhotos = user?.photos || [];
     console.log(`📸 [UploadPhotos] Current photos array:`, currentPhotos);
 
-    // Create FULL URLs for uploaded photos
-    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    // Create FULL URLs - auto-detect from request or use env variable
+    const protocol = req.protocol || 'https';
+    const host = req.get('host') || 'cruizr-backend.onrender.com';
+    const baseUrl = process.env.BACKEND_URL || `${protocol}://${host}`;
+    console.log(`📸 [UploadPhotos] Using baseUrl:`, baseUrl);
+    
     const newPhotoPaths = files.map((file) => `${baseUrl}/uploads/photos/${file.filename}`);
     console.log(`📸 [UploadPhotos] New photo FULL URLs:`, newPhotoPaths);
     
