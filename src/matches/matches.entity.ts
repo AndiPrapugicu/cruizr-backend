@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../users/users.entity';
 
 @Entity()
@@ -14,4 +14,10 @@ export class Match {
 
   @Column({ default: 'pending' })
   status: 'pending' | 'accepted' | 'rejected';
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

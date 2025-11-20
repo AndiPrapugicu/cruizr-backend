@@ -93,7 +93,7 @@ export class MatchesService {
         { userB: { id: userId }, status: 'accepted' },
       ],
       relations: ['userA', 'userB'],
-      order: { createdAt: 'DESC' },
+      order: { id: 'DESC' },
       take: 10,
     });
 
@@ -105,7 +105,7 @@ export class MatchesService {
         carModel: otherUser.carModel,
         imageUrl: otherUser.imageUrl,
         matchId: match.id,
-        matchedAt: match.createdAt,
+        matchedAt: match.updatedAt || new Date(),
       };
     });
   }
