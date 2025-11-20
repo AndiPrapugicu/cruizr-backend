@@ -29,7 +29,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 // import { UserProfileDto } from './dto/user-profile.dto';
 import { UserProfileDto } from './dto/user-profile.dto';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
@@ -385,7 +385,7 @@ export class UsersController {
   // ────────────────────────────────────────────────────────────
   @Post('onboarding-register')
   @UseInterceptors(
-    FilesInterceptor('photos', 10, {
+    AnyFilesInterceptor({
       storage: diskStorage({
         destination: './uploads/photos',
         filename: (req, file, cb) => {
@@ -397,14 +397,31 @@ export class UsersController {
   )
   async completeOnboardingWithRegistration(
     @Body() dto: any,
-    @UploadedFiles() photos: Express.Multer.File[],
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
     try {
       console.log(
         '🎯 [OnboardingRegister] Starting registration+onboarding for:',
         dto.firstName,
       );
-      console.log('📸 [OnboardingRegister] Received', photos?.length || 0, 'photo files');
+      console.log('📸 [OnboardingRegister] Received', files?.length || 0, 'total files');
+
+      // Separate user photos from car photos
+      const userPhotos = files.filter(f => f.fieldname === 'photos');
+      const carPhotosByIndex: { [key: string]: Express.Multer.File[] } = {};
+      
+      files.forEach(f => {
+        if (f.fieldname.startsWith('carPhotos_')) {
+          const carIndex = f.fieldname.split('_')[1];
+          if (!carPhotosByIndex[carIndex]) {
+            carPhotosByIndex[carIndex] = [];
+          }
+          carPhotosByIndex[carIndex].push(f);
+        }
+      });
+
+      console.log('📸 User photos:', userPhotos.length);
+      console.log('🚗 Car photos by index:', Object.keys(carPhotosByIndex).map(idx => `Car ${idx}: ${carPhotosByIndex[idx].length} photos`));
 
       // Create user account
       const hash = await require('bcrypt').hash('password123', 10); // Temporary password
@@ -420,7 +437,8 @@ export class UsersController {
       // Add uploaded file paths to DTO
       const onboardingData = {
         ...dto,
-        uploadedPhotos: photos || [],
+        uploadedPhotos: userPhotos || [],
+        carPhotosByIndex: carPhotosByIndex,
         interests: dto.interests ? JSON.parse(dto.interests) : [],
       };
 

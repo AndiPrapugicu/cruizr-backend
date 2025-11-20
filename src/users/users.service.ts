@@ -104,7 +104,8 @@ export class UsersService {
       firstName, 
       birthday, 
       agreed, 
-      uploadedPhotos, // Now we receive actual uploaded files
+      uploadedPhotos, // User profile photos
+      carPhotosByIndex, // Car photos grouped by car index
       ...userData 
     } = dto;
 
@@ -119,7 +120,7 @@ export class UsersService {
       console.log(`✅ Saved ${savedPhotos.length} photos:`, savedPhotos);
     }
 
-    // Parse cars if it's a JSON string
+    // Parse cars if it's a JSON string or array of JSON strings
     let carsData = cars;
     if (typeof cars === 'string') {
       try {
@@ -128,10 +129,34 @@ export class UsersService {
         console.error('❌ Error parsing cars JSON:', error);
         carsData = [];
       }
+    } else if (Array.isArray(cars)) {
+      // Parse each car if it's a JSON string
+      carsData = cars.map(car => {
+        if (typeof car === 'string') {
+          try {
+            return JSON.parse(car);
+          } catch (error) {
+            console.error('❌ Error parsing car JSON:', error);
+            return null;
+          }
+        }
+        return car;
+      }).filter(car => car !== null);
     }
 
-    // For now, we'll handle car photos in a separate upload if needed
-    // TODO: Handle car photo uploads from FormData
+    // Add car photos to each car
+    if (carPhotosByIndex && Object.keys(carPhotosByIndex).length > 0) {
+      console.log('🚗 Processing car photos...');
+      Object.keys(carPhotosByIndex).forEach(carIndex => {
+        const carPhotos = carPhotosByIndex[carIndex];
+        const photoPaths = carPhotos.map((file: Express.Multer.File) => `/uploads/photos/${file.filename}`);
+        
+        if (carsData && carsData[carIndex]) {
+          carsData[carIndex].photos = photoPaths;
+          console.log(`✅ Added ${photoPaths.length} photos to car ${carIndex}`);
+        }
+      });
+    }
 
     console.log('🚗 Cars data to save:', carsData);
 
