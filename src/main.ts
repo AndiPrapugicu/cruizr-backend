@@ -53,10 +53,15 @@ async function bootstrap() {
 
   console.log(`🌐 CORS enabled for origins:`, allowedOrigins);
 
-  // Servește fișierele din uploads - ajustat pentru dist/src/main.js
-  const uploadsPath = join(__dirname, '..', '..', '..', 'uploads');
+  // Servește fișierele din uploads - path absolut pentru Render Persistent Disk
+  const uploadsPath = process.env.NODE_ENV === 'production' 
+    ? '/opt/render/project/src/uploads'  // Render Persistent Disk mount path
+    : join(__dirname, '..', '..', 'uploads'); // Local development
+  
   app.use('/uploads', express.static(uploadsPath));
-  console.log(`📁 Serving uploads from: ${uploadsPath}`);
+  console.log(`📁 Serving static uploads from: ${uploadsPath}`);
+  console.log(`📁 __dirname is: ${__dirname}`);
+  console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
 
   const config = new DocumentBuilder()
     .setTitle('AutoMatch API')
