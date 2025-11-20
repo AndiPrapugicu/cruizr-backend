@@ -106,6 +106,52 @@ export class UsersController {
   }
 
   // ────────────────────────────────────────────────────────────
+  // ▶︎ Încarcă multiple poze pentru profil (upload pe disk, adaugă la photos[])
+  // ────────────────────────────────────────────────────────────
+  @UseGuards(JwtAuthGuard)
+  @Post('upload-photos')
+  @UseInterceptors(
+    FilesInterceptor('photos', 6, {
+      storage: diskStorage({
+        destination: './uploads/photos',
+        filename: (req, file, cb) => {
+          const ext = path.extname(file.originalname);
+          cb(null, uuidv4() + ext);
+        },
+      }),
+    }),
+  )
+  async uploadPhotos(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req,
+  ) {
+    const userId = +req.user.userId;
+    console.log(`📸 Uploading ${files.length} photos for user ${userId}`);
+
+    // Get current user photos
+    const user = await this.usersService.findById(userId);
+    const currentPhotos = user?.photos || [];
+
+    // Add new photo paths
+    const newPhotoPaths = files.map((file) => `/uploads/photos/${file.filename}`);
+    const allPhotos = [...currentPhotos, ...newPhotoPaths];
+
+    // Update user with new photos
+    await this.usersService.updateProfile(userId, {
+      photos: allPhotos,
+      imageUrl: allPhotos[0], // Keep first photo as profile image
+    });
+
+    console.log(`✅ Updated user ${userId} with ${allPhotos.length} total photos`);
+
+    return {
+      success: true,
+      photos: allPhotos,
+      newPhotos: newPhotoPaths,
+    };
+  }
+
+  // ────────────────────────────────────────────────────────────
   // ▶︎ Găsește utilizatori din apropiere, excluzând swipe‐uri recent și blocări
   // ────────────────────────────────────────────────────────────
   @UseGuards(JwtAuthGuard)
