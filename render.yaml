@@ -7,6 +7,11 @@ services:
     buildCommand: npm install && npx nest build
     startCommand: node dist/src/main.js
     healthCheckPath: /
+    # Persistent disk for uploads
+    disk:
+      name: cruizr-uploads
+      mountPath: /opt/render/project/src/uploads
+      sizeGB: 1
     envVars:
       - key: NODE_VERSION
         value: 22.16.0
