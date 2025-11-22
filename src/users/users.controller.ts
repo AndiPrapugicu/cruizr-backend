@@ -523,7 +523,7 @@ export class UsersController {
       const hash = await require('bcrypt').hash('password123', 10); // Temporary password
       const userData = {
         name: dto.firstName,
-        email: `${dto.firstName.toLowerCase()}${Date.now()}@carmatch.temp`,
+        email: `${dto.firstName.toLowerCase()}${Date.now()}@cruizr.temp`,
         password: hash,
       };
 
