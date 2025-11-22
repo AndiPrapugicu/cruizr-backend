@@ -61,6 +61,7 @@ export class UsersController {
   async getMe(@Req() req) {
     const user = await this.usersService.findById(+req.user.userId);
     if (user) {
+      console.log('👤 [GET /users/me] User:', user.id, 'onboardingCompleted:', user.onboardingCompleted);
       const { password, email, ...rest } = user;
       return rest;
     }
@@ -385,14 +386,93 @@ export class UsersController {
 
   // ────────────────────────────────────────────────────────────
   // ▶︎ NOU: Complete onboarding
-  //   → POST /users/onboarding
+  //   → POST /users/onboarding (AUTHENTICATED)
   // ────────────────────────────────────────────────────────────
   @UseGuards(JwtAuthGuard)
   @Post('onboarding')
-  async completeOnboarding(@Req() req, @Body() dto: any) {
-    // Poți valida dto cu un DTO dedicat dacă vrei
-    await this.usersService.completeOnboarding(+req.user.userId, dto);
-    return { success: true };
+  @UseInterceptors(
+    AnyFilesInterceptor({
+      storage: diskStorage({
+        destination: './uploads/photos',
+        filename: (req, file, cb) => {
+          const ext = path.extname(file.originalname);
+          cb(null, uuidv4() + ext);
+        },
+      }),
+    }),
+  )
+  async completeOnboarding(
+    @Req() req,
+    @Body() dto: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    try {
+      console.log('🎯 [POST /users/onboarding] User ID:', req.user.userId);
+      console.log('📦 Received DTO:', Object.keys(dto));
+      console.log('📸 Received files:', files?.length || 0);
+
+      // Group files by type
+      const userPhotos: Express.Multer.File[] = [];
+      const carPhotosByIndex: { [key: string]: Express.Multer.File[] } = {};
+
+      if (files && files.length > 0) {
+        files.forEach((file) => {
+          if (file.fieldname === 'photos') {
+            userPhotos.push(file);
+          } else if (file.fieldname.startsWith('carPhotos_')) {
+            const carIndex = file.fieldname.split('_')[1];
+            if (!carPhotosByIndex[carIndex]) {
+              carPhotosByIndex[carIndex] = [];
+            }
+            carPhotosByIndex[carIndex].push(file);
+          }
+        });
+      }
+
+      console.log('👤 User photos:', userPhotos.length);
+      console.log('🚗 Car photos by index:', Object.keys(carPhotosByIndex));
+
+      // Parse interests if it's a JSON string
+      if (dto.interests && typeof dto.interests === 'string') {
+        try {
+          dto.interests = JSON.parse(dto.interests);
+        } catch (error) {
+          console.error('❌ Error parsing interests:', error);
+          dto.interests = [];
+        }
+      }
+
+      // Prepare data for service
+      const onboardingData = {
+        ...dto,
+        uploadedPhotos: userPhotos,
+        carPhotosByIndex,
+      };
+
+      await this.usersService.completeOnboarding(+req.user.userId, onboardingData);
+      
+      // Fetch updated user data
+      const updatedUser = await this.usersService.findById(+req.user.userId);
+      
+      if (!updatedUser) {
+        throw new NotFoundException('User not found after onboarding');
+      }
+      
+      console.log('✅ User after onboarding:', updatedUser.id, 'onboardingCompleted:', updatedUser.onboardingCompleted);
+      
+      return { 
+        success: true,
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          onboardingCompleted: updatedUser.onboardingCompleted,
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error in completeOnboarding:', error);
+      throw error;
+    }
   }
 
   // ────────────────────────────────────────────────────────────
@@ -462,9 +542,22 @@ export class UsersController {
       await this.usersService.completeOnboarding(user.id, onboardingData);
       console.log('✅ [OnboardingRegister] Onboarding completed');
 
+      // Verify user was updated
+      const updatedUser = await this.usersService.findById(user.id);
+      if (!updatedUser) {
+        throw new Error('Failed to retrieve updated user');
+      }
+      
+      console.log('🔍 [OnboardingRegister] User after onboarding:', {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        onboardingCompleted: updatedUser.onboardingCompleted,
+        photos: updatedUser.photos?.length || 0,
+      });
+
       // Generate token
       const jwt = require('jsonwebtoken');
-      const payload = { sub: user.id, email: user.email };
+      const payload = { sub: user.id, email: user.email, name: user.name };
       const secret = process.env.JWT_SECRET || 'fallback-secret';
       const access_token = jwt.sign(payload, secret, { expiresIn: '7d' });
 
@@ -472,9 +565,10 @@ export class UsersController {
         success: true,
         access_token,
         user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          onboardingCompleted: updatedUser.onboardingCompleted,
         },
       };
     } catch (error) {

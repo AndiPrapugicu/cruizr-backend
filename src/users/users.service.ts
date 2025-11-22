@@ -109,8 +109,11 @@ export class UsersService {
       ...userData 
     } = dto;
 
-    // Get base URL - use hardcoded production URL as fallback
-    const baseUrl = process.env.BACKEND_URL || 'https://cruizr-backend.onrender.com';
+    console.log('📦 userData from DTO:', userData);
+    console.log('🔍 userData.onboardingCompleted:', userData.onboardingCompleted);
+
+    // Get base URL - use localhost for local development, production URL for deployed
+    const baseUrl = process.env.BACKEND_URL || 'http://localhost:3000';
     console.log('🌐 Using baseUrl for photos:', baseUrl);
 
     // Process uploaded photo files
@@ -166,17 +169,29 @@ export class UsersService {
 
     // Update user data with proper field mapping
     const userUpdateData = {
-      ...userData,
       ...(firstName && { name: firstName }),
       ...(birthday && { birthdate: birthday }),
       ...(savedPhotos.length > 0 && { photos: savedPhotos }),
       ...(savedPhotos.length > 0 && { imageUrl: savedPhotos[0] }), // Set first photo as profile image
-      onboardingCompleted: true,
+      ...userData, // Spread other fields from DTO (gender, interests, bio, etc.)
+      onboardingCompleted: true, // MUST be last to ensure it's not overwritten
     };
 
     console.log('📝 User update data:', userUpdateData);
+    console.log('🔍 onboardingCompleted value:', userUpdateData.onboardingCompleted);
 
-    await this.userRepo.update(userId, userUpdateData);
+    const updateResult = await this.userRepo.update(userId, userUpdateData);
+    console.log('📊 Update result:', updateResult);
+    
+    // Verify the update was successful
+    const updatedUser = await this.userRepo.findOne({ where: { id: userId } });
+    console.log('✅ User after update - onboardingCompleted:', updatedUser?.onboardingCompleted);
+    console.log('👤 Full user after update:', {
+      id: updatedUser?.id,
+      name: updatedUser?.name,
+      onboardingCompleted: updatedUser?.onboardingCompleted,
+      photos: updatedUser?.photos?.length || 0,
+    });
 
     // Save cars if provided
     if (carsData && Array.isArray(carsData) && carsData.length > 0) {

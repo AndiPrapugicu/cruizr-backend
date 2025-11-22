@@ -291,9 +291,9 @@ export class BadgesService {
   // Badge checking methods for different actions
   async checkCarBadges(userId: number) {
     try {
-      // Get user's cars count
+      // Get user's cars count - PostgreSQL uses $1, $2 instead of ?
       const carsCount = await this.dataSource.query(
-        'SELECT COUNT(*) as count FROM cars WHERE userId = ?',
+        'SELECT COUNT(*) as count FROM cars WHERE "userId" = $1',
         [userId],
       );
       const count = parseInt(carsCount[0]?.count || '0');
@@ -344,9 +344,9 @@ export class BadgesService {
 
   async checkModificationBadges(userId: number, carId: number) {
     try {
-      // Get modification count for this car
+      // Get modification count for this car - PostgreSQL uses $1, $2 instead of ?
       const car = await this.dataSource.query(
-        'SELECT mods FROM cars WHERE id = ? AND userId = ?',
+        'SELECT mods FROM cars WHERE id = $1 AND "userId" = $2',
         [carId, userId],
       );
 
