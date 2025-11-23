@@ -11,8 +11,7 @@ import { Match } from './matches.entity';
 import { User } from '../users/users.entity';
 import { Swipe } from '../swipes/swipe.entity';
 import { UsersService } from '../users/users.service';
-// import { AppGateway } from '../app.gateway';
-// import { AppGateway } from '../app.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 import { AppGateway } from 'src/app.gateway';
 
 @Injectable()
@@ -22,6 +21,7 @@ export class MatchesService {
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Swipe) private swipeRepo: Repository<Swipe>,
     private usersService: UsersService,
+    private notificationsService: NotificationsService,
     private appGateway: AppGateway,
   ) {}
 
@@ -328,7 +328,13 @@ export class MatchesService {
         const likeBackUserId = fromUserId; // Y (cel care dă like-back acum)
         const firstLikeUserId = toUserId; // X (cel care a dat primul like)
 
-        // === NOTIFICARE MATCH doar către X ===
+        // === NOTIFICARE MATCH către ambii ===
+        await this.notificationsService.notifyNewMatch(
+          firstLikeUserId,
+          likeBackUserId,
+          inverseMatch.id,
+        );
+
         this.appGateway.server
           .to(`user_${firstLikeUserId}`)
           .emit('notify_match', {
@@ -350,6 +356,10 @@ export class MatchesService {
           status: 'pending',
         });
         await this.matchRepo.save(newMatch);
+        
+        // Notificare de like către toUserId
+        await this.notificationsService.notifyNewLike(toUserId, fromUserId);
+        
         return { match: false, newMatch };
       }
     } else {
@@ -363,6 +373,8 @@ export class MatchesService {
 
       // === NOTIFICARE LIKE ===
       // Trimite notificare doar către userB (cel care a primit like-ul)
+      await this.notificationsService.notifyNewLike(toUserId, fromUserId);
+      
       this.appGateway.server.to(`user_${userB.id}`).emit('notify_like', {
         fromUser: userA.name,
         userId: userA.id,

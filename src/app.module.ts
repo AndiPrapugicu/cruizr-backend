@@ -11,7 +11,9 @@ import { BadgesModule } from './badges/badges.module';
 import { FuelModule } from './fuel/fuel.module';
 import { StoreModule } from './store/store.module';
 import { PaymentsModule } from './payments/payments.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { User } from './users/users.entity';
+import { Notification } from './notifications/notification.entity';
 import { Match } from './matches/matches.entity';
 import { Message } from './chat/chat.entity';
 import { Swipe } from './swipes/swipe.entity';
@@ -58,6 +60,7 @@ import { AppGateway } from './app.gateway';
           StoreItem,
           UserInventory,
           StoreTransaction,
+          Notification,
         ],
         synchronize: true, // ⚠️ Doar pentru development! Schimbă în false pentru production
         ssl: {
@@ -83,6 +86,7 @@ import { AppGateway } from './app.gateway';
     FuelModule,
     StoreModule,
     PaymentsModule,
+    NotificationsModule,
   ],
   providers: [AppGateway],
   exports: [AppGateway],
