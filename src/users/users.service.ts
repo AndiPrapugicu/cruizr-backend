@@ -48,6 +48,20 @@ export class UsersService {
   ) {}
 
   async create(userData: Partial<User>) {
+    // Set default location if not provided
+    if (!userData.latitude || !userData.longitude) {
+      const defaultLocations = [
+        { city: 'Bucharest', lat: 44.4268, lng: 26.1025 },
+        { city: 'Iași', lat: 47.1585, lng: 27.6014 },
+        { city: 'Cluj-Napoca', lat: 46.7712, lng: 23.6236 },
+      ];
+      const randomLocation = defaultLocations[Math.floor(Math.random() * defaultLocations.length)];
+      userData.latitude = randomLocation.lat + (Math.random() - 0.5) * 0.02;
+      userData.longitude = randomLocation.lng + (Math.random() - 0.5) * 0.02;
+      userData.city = userData.city || randomLocation.city;
+      console.log(`📍 [Create] No coordinates provided, using default: ${randomLocation.city}`);
+    }
+
     const user = this.userRepo.create(userData);
     const savedUser = await this.userRepo.save(user);
 
