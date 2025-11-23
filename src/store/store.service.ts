@@ -391,10 +391,25 @@ export class StoreService {
 
     // Check if user has enough currency
     const wallet = await this.fuelService.getWallet(userId);
-    const currentBalance =
-      currency === 'fuel' ? wallet.balance : wallet.premiumBalance;
+    console.log('🛒 Wallet data:', wallet);
+    
+    // Convert to numbers for proper comparison (database returns DECIMAL as string)
+    const currentBalance = Number(
+      currency === 'fuel' ? wallet.balance : wallet.premiumBalance
+    );
+    const itemPrice = Number(price);
+    
+    console.log('🛒 Balance check:', {
+      currency,
+      currentBalance,
+      price: itemPrice,
+      hasEnough: currentBalance >= itemPrice,
+      walletBalance: wallet.balance,
+      walletPremium: wallet.premiumBalance
+    });
 
-    if (currentBalance < price) {
+    if (currentBalance < itemPrice) {
+      console.log('❌ Insufficient balance!', { currentBalance, price: itemPrice, currency });
       throw new BadRequestException(`Insufficient ${currency} points`);
     }
 
@@ -413,11 +428,11 @@ export class StoreService {
     try {
       await this.storeTransactionRepository.save(transaction);
 
-      // Deduct currency from user wallet
+      // Deduct currency from user wallet (convert to number)
       if (currency === 'fuel') {
-        await this.fuelService.deductFuel(userId, price);
+        await this.fuelService.deductFuel(userId, itemPrice);
       } else {
-        await this.fuelService.deductPremiumPoints(userId, price);
+        await this.fuelService.deductPremiumPoints(userId, itemPrice);
       }
 
       // Add item to user inventory
