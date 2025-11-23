@@ -158,14 +158,14 @@ export class FuelService {
       amount,
       reason,
       metadata,
-      balanceAfter: wallet.balance + amount,
+      balanceAfter: Number(wallet.balance) + amount,
     });
 
     await this.fuelTransactionRepository.save(transaction);
 
-    // Update wallet
-    wallet.balance += amount;
-    wallet.totalEarned += amount;
+    // Update wallet (ensure numeric addition, not string concatenation)
+    wallet.balance = Number(wallet.balance) + amount;
+    wallet.totalEarned = Number(wallet.totalEarned) + amount;
     wallet.lastEarnDate = new Date();
 
     // Update streak for login
@@ -204,7 +204,7 @@ export class FuelService {
     const wallet = await this.getWallet(userId);
     const { amount, rewardId } = spendFuelDto;
 
-    if (wallet.balance < amount) {
+    if (Number(wallet.balance) < amount) {
       throw new BadRequestException('Insufficient balance');
     }
 
@@ -215,14 +215,14 @@ export class FuelService {
       amount,
       reason: FuelEarnReason.PREMIUM_BONUS, // Generic spend reason
       metadata: { rewardId },
-      balanceAfter: wallet.balance - amount,
+      balanceAfter: Number(wallet.balance) - amount,
     });
 
     await this.fuelTransactionRepository.save(transaction);
 
-    // Update wallet
-    wallet.balance -= amount;
-    wallet.totalSpent += amount;
+    // Update wallet (ensure numeric subtraction, not string concatenation)
+    wallet.balance = Number(wallet.balance) - amount;
+    wallet.totalSpent = Number(wallet.totalSpent) + amount;
 
     await this.fuelWalletRepository.save(wallet);
 
@@ -550,17 +550,17 @@ export class FuelService {
     // Simulate payment processing delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Add premium points to wallet
-    wallet.premiumPoints += premiumPackage.premiumPoints;
-    wallet.premiumBalance += premiumPackage.premiumPoints;
+    // Add premium points to wallet (ensure numeric addition)
+    wallet.premiumPoints = Number(wallet.premiumPoints) + premiumPackage.premiumPoints;
+    wallet.premiumBalance = Number(wallet.premiumBalance) + premiumPackage.premiumPoints;
 
     // Apply bonus if applicable
     if (premiumPackage.bonusPercentage > 0) {
       const bonusPoints = Math.floor(
         premiumPackage.premiumPoints * (premiumPackage.bonusPercentage / 100),
       );
-      wallet.premiumPoints += bonusPoints;
-      wallet.premiumBalance += bonusPoints;
+      wallet.premiumPoints = Number(wallet.premiumPoints) + bonusPoints;
+      wallet.premiumBalance = Number(wallet.premiumBalance) + bonusPoints;
     }
 
     // Check if package grants VIP status
@@ -717,21 +717,21 @@ export class FuelService {
       amount,
       reason: FuelEarnReason.PREMIUM_BONUS, // Store purchase reason
       metadata: { source: 'store_purchase' },
-      balanceAfter: wallet.balance - amount,
+      balanceAfter: Number(wallet.balance) - amount,
     });
 
     await this.fuelTransactionRepository.save(transaction);
 
-    // Update wallet
-    wallet.balance -= amount;
-    wallet.totalSpent += amount;
+    // Update wallet (ensure numeric subtraction)
+    wallet.balance = Number(wallet.balance) - amount;
+    wallet.totalSpent = Number(wallet.totalSpent) + amount;
     await this.fuelWalletRepository.save(wallet);
   }
 
   async deductPremiumPoints(userId: number, amount: number): Promise<void> {
     const wallet = await this.getWallet(userId);
 
-    if (wallet.premiumBalance < amount) {
+    if (Number(wallet.premiumBalance) < amount) {
       throw new BadRequestException('Insufficient premium balance');
     }
 
@@ -742,13 +742,13 @@ export class FuelService {
       amount,
       reason: FuelEarnReason.PREMIUM_BONUS, // Premium store purchase reason
       metadata: { source: 'premium_store_purchase' },
-      balanceAfter: wallet.premiumBalance - amount,
+      balanceAfter: Number(wallet.premiumBalance) - amount,
     });
 
     await this.fuelTransactionRepository.save(transaction);
 
-    // Update wallet
-    wallet.premiumBalance -= amount;
+    // Update wallet (ensure numeric subtraction)
+    wallet.premiumBalance = Number(wallet.premiumBalance) - amount;
     await this.fuelWalletRepository.save(wallet);
   }
 }
