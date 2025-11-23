@@ -111,6 +111,7 @@ export class StoreService {
       name: item.name,
       description: item.description,
       category: item.currency,
+      storeCategory: item.category, // Real category: boosts, likes, etc.
       subcategory: item.subcategory || item.category,
       price: item.price,
       currency: item.currency,
