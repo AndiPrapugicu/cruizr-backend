@@ -167,12 +167,38 @@ export class UsersService {
 
     console.log('🚗 Cars data to save:', carsData);
 
+    // Set location coordinates - use provided coordinates or default to Bucharest
+    const defaultLocations = [
+      { city: 'Bucharest', lat: 44.4268, lng: 26.1025 },
+      { city: 'Iași', lat: 47.1585, lng: 27.6014 },
+      { city: 'Cluj-Napoca', lat: 46.7712, lng: 23.6236 },
+    ];
+    
+    // Use provided coordinates or pick a random default location
+    let latitude = dto.latitude || userData.latitude;
+    let longitude = dto.longitude || userData.longitude;
+    let city = dto.city || userData.city;
+    
+    if (!latitude || !longitude) {
+      const randomLocation = defaultLocations[Math.floor(Math.random() * defaultLocations.length)];
+      // Add small random variation (±0.01 degrees ≈ ±1km)
+      latitude = randomLocation.lat + (Math.random() - 0.5) * 0.02;
+      longitude = randomLocation.lng + (Math.random() - 0.5) * 0.02;
+      city = city || randomLocation.city;
+      console.log(`📍 No coordinates provided, using default location: ${randomLocation.city}`);
+    } else {
+      console.log(`📍 Using provided coordinates: ${latitude}, ${longitude}`);
+    }
+
     // Update user data with proper field mapping
     const userUpdateData = {
       ...(firstName && { name: firstName }),
       ...(birthday && { birthdate: birthday }),
       ...(savedPhotos.length > 0 && { photos: savedPhotos }),
       ...(savedPhotos.length > 0 && { imageUrl: savedPhotos[0] }), // Set first photo as profile image
+      latitude,
+      longitude,
+      city,
       ...userData, // Spread other fields from DTO (gender, interests, bio, etc.)
       onboardingCompleted: true, // MUST be last to ensure it's not overwritten
     };
