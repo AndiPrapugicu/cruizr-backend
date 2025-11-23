@@ -34,6 +34,7 @@ export interface Preferences {
   prefMaxAge: number;
   prefDistance: number;
   prefCarBrand: string;
+  worldwide: boolean;
 }
 
 @Injectable()
@@ -458,10 +459,17 @@ export class UsersService {
     console.log(`🚫 Excluded from blocked: [${blockedIds.join(', ')}]`);
     console.log(`📋 Total excluded IDs: [${allExcludedIds.join(', ')}]`);
 
-    // Ia preferința de gen a userului curent
+    // Ia preferința de gen a userului curent și setările worldwide
     const currentUser = await this.userRepo.findOne({
       where: { id: currentUserId },
+      select: ['id', 'prefGender', 'prefWorldwide', 'isVip'],
     });
+
+    // Check if user has worldwide enabled (VIP only feature)
+    const useWorldwide = currentUser?.prefWorldwide && currentUser?.isVip;
+
+    console.log(`🌍 Worldwide search: ${useWorldwide ? 'ENABLED (VIP)' : 'DISABLED'}`);
+    console.log(`📏 Distance filter: ${useWorldwide ? 'NONE (worldwide)' : `${distanceKm} km`}`);
 
     const allUsers = await this.userRepo.find({
       where: {
@@ -534,7 +542,12 @@ export class UsersService {
           distance: Math.round(distance * 10) / 10, // rotunjește la 1 zecimală
         };
       })
-      .filter((user) => user.distance <= distanceKm);
+      .filter((user) => {
+        // If worldwide is enabled, don't filter by distance
+        if (useWorldwide) return true;
+        // Otherwise, apply distance filter
+        return user.distance <= distanceKm;
+      });
 
     // Apply Double Swipe Chance power-up: Check each user and potentially duplicate them
     let finalResults = [...usersWithDistance];
@@ -600,6 +613,7 @@ export class UsersService {
       prefMaxAge: user.prefMaxAge ?? 100,
       prefDistance: user.prefDistance ?? 20,
       prefCarBrand: user.prefCarBrand ?? '',
+      worldwide: user.prefWorldwide ?? false,
     };
   }
 
@@ -610,11 +624,17 @@ export class UsersService {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new BadRequestException('User not found');
 
+    // Check VIP status if trying to enable worldwide
+    if (dto.worldwide && !user.isVip) {
+      throw new BadRequestException('Worldwide search is only available for VIP users');
+    }
+
     // Suprascriem doar câmpurile existente în dto
     if (dto.prefMinAge !== undefined) user.prefMinAge = dto.prefMinAge;
     if (dto.prefMaxAge !== undefined) user.prefMaxAge = dto.prefMaxAge;
     if (dto.prefDistance !== undefined) user.prefDistance = dto.prefDistance;
     if (dto.prefCarBrand !== undefined) user.prefCarBrand = dto.prefCarBrand;
+    if (dto.worldwide !== undefined) user.prefWorldwide = dto.worldwide;
 
     await this.userRepo.save(user);
 
@@ -623,6 +643,7 @@ export class UsersService {
       prefMaxAge: user.prefMaxAge!,
       prefDistance: user.prefDistance!,
       prefCarBrand: user.prefCarBrand!,
+      worldwide: user.prefWorldwide,
     };
   }
 

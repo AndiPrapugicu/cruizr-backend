@@ -81,6 +81,9 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   prefCarBrand: string;
 
+  @Column({ default: false })
+  prefWorldwide: boolean;
+
   @UpdateDateColumn()
   updatedAt: Date;
 
