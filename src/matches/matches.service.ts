@@ -151,6 +151,50 @@ export class MatchesService {
         userA: existingMatch.userA.id,
         userB: existingMatch.userB.id,
       });
+      
+      // Dacă match-ul este pending și utilizatorul curent este userB (cel care primește like-ul),
+      // și dă like înapoi (right sau up), actualizăm match-ul la accepted
+      if (existingMatch.status === 'pending' && 
+          existingMatch.userB.id === fromUserId && 
+          (direction === 'right' || direction === 'up')) {
+        
+        console.log('💚 User is liking back! Accepting match...');
+        
+        // Creăm swipe pentru like-back
+        const fromUser = await this.userRepo.findOne({ where: { id: fromUserId } });
+        const toUser = await this.userRepo.findOne({ where: { id: toUserId } });
+        
+        if (fromUser && toUser) {
+          const swipeEntity = this.swipeRepo.create({
+            user: fromUser,
+            targetUser: toUser,
+            direction,
+          });
+          await this.swipeRepo.save(swipeEntity);
+        }
+        
+        existingMatch.status = 'accepted';
+        await this.matchRepo.save(existingMatch);
+
+        // Notifică ambii utilizatori despre match
+        await this.notificationsService.notifyNewMatch(
+          existingMatch.userA.id,
+          existingMatch.userB.id,
+          existingMatch.id,
+        );
+
+        this.appGateway.server
+          .to(`user_${existingMatch.userA.id}`)
+          .emit('notify_match', {
+            withUser: existingMatch.userB.name,
+            matchId: existingMatch.id,
+          });
+
+        console.log('✅ Match accepted:', existingMatch);
+        return { match: true, newMatch: existingMatch };
+      }
+      
+      // În celelalte cazuri, returnăm match-ul existent fără modificări
       return { 
         skipped: true, 
         match: existingMatch.status === 'accepted',
