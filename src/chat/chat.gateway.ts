@@ -71,6 +71,7 @@ export class ChatGateway {
         this.logger.debug(`PAYLOAD JWT: ${JSON.stringify(payload)}`);
         // 4) Extrage numele sau email-ul din payload (după cum ai definit tu când ai generat token-ul)
         userName = payload.name || payload.email || 'Anonim';
+        this.logger.debug(`🔍 Username extras din JWT: ${userName} (payload.name: ${payload.name}, payload.email: ${payload.email})`);
       } catch (err) {
         this.logger.warn(`JWT invalid sau expirat: ${(err as Error).message}`);
         // În acest caz, userName rămâne 'Anonim'
@@ -82,6 +83,8 @@ export class ChatGateway {
       ...message,
       from: userName,
     });
+    
+    this.logger.debug(`💬 Mesaj salvat cu from="${userName}" pentru match ${message.matchId}`);
 
     // 6) Emită celor conectați în camera (room) corespunzătoare
     this.server.to(message.matchId).emit('receiveMessage', saved);
