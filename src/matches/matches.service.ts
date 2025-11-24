@@ -131,7 +131,31 @@ export class MatchesService {
     // Verificăm dacă a existat un swipe recent
     const existingSwipe = await this.checkRecentSwipe(fromUserId, toUserId);
     if (existingSwipe) {
+      console.log('⚠️ Swipe already exists (recent swipe):', existingSwipe);
       return { skipped: true, swipe: existingSwipe };
+    }
+
+    // Verificăm dacă există deja un Match între acești doi utilizatori
+    const existingMatch = await this.matchRepo.findOne({
+      where: [
+        { userA: { id: fromUserId }, userB: { id: toUserId } },
+        { userA: { id: toUserId }, userB: { id: fromUserId } },
+      ],
+      relations: ['userA', 'userB'],
+    });
+
+    if (existingMatch) {
+      console.log('⚠️ Match already exists:', {
+        matchId: existingMatch.id,
+        status: existingMatch.status,
+        userA: existingMatch.userA.id,
+        userB: existingMatch.userB.id,
+      });
+      return { 
+        skipped: true, 
+        match: existingMatch.status === 'accepted',
+        existingMatch 
+      };
     }
 
     // Încărcăm entitățile User pentru fromUser și toUser

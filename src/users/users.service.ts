@@ -420,23 +420,31 @@ export class UsersService {
         user: { id: currentUserId },
         createdAt: Between(cutoff, new Date()),
       },
-      select: ['targetUserId'],
+      select: ['targetUserId', 'direction', 'createdAt'],
     });
     const excludedIdsFromSwipes = recentSwipes.map((sw) => sw.targetUserId);
+    
+    console.log(`🔍 Found ${recentSwipes.length} recent swipes (last ${days} days)`);
 
     // Utilizatori cu care deja avem match (în ambele direcții)
-    // Folosim query-ul raw pentru a accesa direct coloanele userAId și userBId
+    // Excludem TOATE match-urile (pending, accepted, rejected) pentru a preveni re-apariția users
     const existingMatches = await this.matchRepo
       .createQueryBuilder('match')
-      .where('match.userAId = :userId', { userId: currentUserId })
-      .orWhere('match.userBId = :userId', { userId: currentUserId })
-      .getRawMany();
+      .leftJoinAndSelect('match.userA', 'userA')
+      .leftJoinAndSelect('match.userB', 'userB')
+      .where('userA.id = :userId', { userId: currentUserId })
+      .orWhere('userB.id = :userId', { userId: currentUserId })
+      .getMany();
 
-    const excludedIdsFromMatches = existingMatches.map((match) =>
-      match.match_userAId === currentUserId
-        ? match.match_userBId
-        : match.match_userAId,
-    );
+    console.log(`🔍 Found ${existingMatches.length} existing matches (all statuses)`);
+    
+    const excludedIdsFromMatches = existingMatches.map((match) => {
+      const otherId = match.userA.id === currentUserId
+        ? match.userB.id
+        : match.userA.id;
+      console.log(`  → Excluding user ${otherId} (status: ${match.status})`);
+      return otherId;
+    });
 
     // Blocked IDs
     const blockedIds = await this.getBlockedIds(currentUserId);
